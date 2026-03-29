@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Medal Decompiler — API Docs</title>
+<title>Medal Decompile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0a0b;
     --surface: #111114;
+    --surface2: #16161a;
     --border: #1e1e24;
     --border2: #2a2a33;
     --text: #e8e8f0;
@@ -22,9 +23,7 @@
     --mono: 'JetBrains Mono', monospace;
     --sans: 'Syne', sans-serif;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     background: var(--bg);
     color: var(--text);
@@ -33,409 +32,193 @@
     line-height: 1.7;
     min-height: 100vh;
   }
-
-  /* grid bg */
   body::before {
     content: '';
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background-image:
-      linear-gradient(rgba(192,132,252,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(192,132,252,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(192,132,252,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(192,132,252,0.025) 1px, transparent 1px);
     background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
   }
-
-  .wrap {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* NAV */
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
   nav {
     border-bottom: 1px solid var(--border);
-    padding: 20px 0;
-    position: sticky;
-    top: 0;
-    background: rgba(10,10,11,0.92);
+    padding: 18px 0;
+    position: sticky; top: 0;
+    background: rgba(10,10,11,0.94);
     backdrop-filter: blur(12px);
     z-index: 100;
   }
-
-  nav .wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; }
   .logo {
-    font-family: var(--sans);
-    font-weight: 800;
-    font-size: 18px;
-    letter-spacing: -0.5px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-family: var(--sans); font-weight: 800; font-size: 18px;
+    letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;
   }
-
   .logo-icon {
-    width: 28px;
-    height: 28px;
+    width: 28px; height: 28px;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
+    border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;
   }
-
-  .nav-badge {
-    font-size: 11px;
-    padding: 2px 8px;
-    border: 1px solid var(--border2);
-    border-radius: 20px;
-    color: var(--muted);
-    font-family: var(--mono);
+  .nav-links { display: flex; gap: 24px; }
+  .nav-link {
+    font-size: 12px; color: var(--muted); cursor: pointer;
+    transition: color 0.15s; background: none; border: none;
+    font-family: var(--mono); padding: 0;
   }
+  .nav-link:hover { color: var(--text); }
+  .nav-link.active { color: var(--accent); }
+  .page { display: none; }
+  .page.active { display: block; }
 
-  /* HERO */
-  .hero {
-    padding: 80px 0 60px;
-    border-bottom: 1px solid var(--border);
-  }
-
+  /* DECOMPILE PAGE */
+  .decompile-hero { padding: 60px 0 40px; text-align: center; }
   .hero-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--accent);
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--accent);
     border: 1px solid rgba(192,132,252,0.2);
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 24px;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 20px;
     background: rgba(192,132,252,0.05);
   }
-
   .hero-tag::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 2s infinite;
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); animation: pulse 2s infinite;
   }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   h1 {
     font-family: var(--sans);
-    font-size: clamp(32px, 5vw, 52px);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -1.5px;
-    margin-bottom: 16px;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; line-height: 1.1;
   }
-
   h1 span {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-
-  .hero-sub {
-    color: var(--muted);
-    font-size: 15px;
-    max-width: 500px;
-    margin-bottom: 32px;
-    line-height: 1.8;
+  .hero-sub { color: var(--muted); font-size: 13px; }
+  .upload-section { padding: 0 0 60px; }
+  .drop-zone {
+    border: 1.5px dashed var(--border2); border-radius: 16px;
+    padding: 48px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--surface); margin-bottom: 16px;
   }
-
-  .hero-stats {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent); background: rgba(192,132,252,0.04);
   }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  .drop-zone input { display: none; }
+  .drop-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.2);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; font-size: 22px;
   }
-
-  .stat-val {
-    font-family: var(--sans);
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text);
+  .drop-title { font-family: var(--sans); font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .drop-sub { color: var(--muted); font-size: 12px; }
+  .drop-sub span { color: var(--accent); }
+  .file-info {
+    display: none; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px;
   }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  .file-info.show { display: flex; }
+  .file-name { color: var(--text); flex: 1; }
+  .file-size { color: var(--muted); }
+  .btn-clear {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px;
   }
-
-  /* MAIN CONTENT */
-  .content {
-    padding: 60px 0;
-    display: grid;
-    gap: 48px;
-  }
-
-  /* SECTION */
-  .section-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--accent);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  h2 {
-    font-family: var(--sans);
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-    margin-bottom: 8px;
-  }
-
-  .desc {
-    color: var(--muted);
-    margin-bottom: 24px;
-    font-size: 13px;
-  }
-
-  /* ENDPOINT CARD */
-  .endpoint {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--surface);
-    transition: border-color 0.2s;
-  }
-
-  .endpoint:hover {
-    border-color: var(--border2);
-  }
-
-  .endpoint-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .method {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 5px;
-    letter-spacing: 0.5px;
-  }
-
-  .method.post { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
-  .method.ws   { background: rgba(129,140,248,0.12); color: var(--accent2); border: 1px solid rgba(129,140,248,0.2); }
-
-  .path {
-    font-size: 14px;
-    color: var(--text);
-    flex: 1;
-  }
-
-  .endpoint-desc {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .endpoint-body {
-    padding: 20px;
-    display: grid;
-    gap: 20px;
-  }
-
-  /* TABLE */
-  .param-table {
+  .btn-clear:hover { color: var(--red); }
+  .btn-decompile {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; padding: 13px 24px;
+    color: #fff; font-family: var(--mono); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    margin-bottom: 16px;
+  }
+  .btn-decompile:hover { opacity: 0.9; }
+  .btn-decompile:active { transform: scale(0.99); }
+  .btn-decompile:disabled { opacity: 0.35; cursor: not-allowed; }
+  .status-bar {
+    display: none; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 8px; font-size: 12px; margin-bottom: 16px;
+  }
+  .status-bar.show { display: flex; }
+  .status-bar.loading { background: rgba(129,140,248,0.08); border: 1px solid rgba(129,140,248,0.2); color: var(--accent2); }
+  .status-bar.success { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); color: var(--green); }
+  .status-bar.error { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--red); }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(129,140,248,0.3); border-top-color: var(--accent2);
+    border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .output-section { display: none; margin-bottom: 48px; }
+  .output-section.show { display: block; }
+  .output-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .output-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .output-actions { display: flex; gap: 8px; }
+  .btn-sm {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 5px 12px; color: var(--muted);
+    font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--accent); }
+  .btn-sm.copied { color: var(--green); border-color: var(--green); }
+  .output-box {
+    background: #0d0d10; border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    font-size: 12.5px; line-height: 1.8;
+    overflow-x: auto; max-height: 520px; overflow-y: auto;
+    white-space: pre; color: var(--text);
+    scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
   }
 
-  .param-table th {
-    text-align: left;
-    color: var(--muted);
-    padding: 6px 12px;
-    border-bottom: 1px solid var(--border);
-    font-weight: 400;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  /* DOCS PAGE */
+  .docs-content { padding: 48px 0; display: grid; gap: 40px; }
+  .section-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent);
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
   }
-
-  .param-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  h2 { font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .desc { color: var(--muted); margin-bottom: 20px; font-size: 13px; }
+  .endpoint { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); margin-bottom: 16px; }
+  .endpoint-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
   }
-
+  .method { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 5px; }
+  .method.post { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+  .method.ws   { background: rgba(129,140,248,0.1); color: var(--accent2); border: 1px solid rgba(129,140,248,0.2); }
+  .path { font-size: 14px; flex: 1; }
+  .endpoint-desc { font-size: 11px; color: var(--muted); }
+  .endpoint-body { padding: 18px; display: grid; gap: 16px; }
+  .param-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .param-table th { text-align: left; color: var(--muted); padding: 5px 10px; border-bottom: 1px solid var(--border); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .param-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
   .param-table tr:last-child td { border-bottom: none; }
-
   .param-name { color: var(--accent); }
   .param-type { color: var(--accent2); font-size: 11px; }
-  .param-note { color: var(--muted); font-size: 12px; }
-
-  /* CODE BLOCK */
-  .code-label {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .code-block {
-    background: #0d0d10;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    font-size: 12.5px;
-    line-height: 1.8;
-    overflow-x: auto;
-    position: relative;
-  }
-
-  .copy-btn {
-    background: var(--border2);
-    border: none;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .copy-btn:hover { background: var(--border2); color: var(--text); }
-  .copy-btn.copied { color: var(--green); }
-
-  .kw  { color: #c084fc; }
-  .str { color: #86efac; }
-  .fn  { color: #93c5fd; }
-  .cm  { color: #4b5563; }
-  .num { color: #fca5a5; }
-  .var { color: #fde68a; }
-
-  /* AUTH BOX */
-  .auth-box {
-    background: rgba(251,191,36,0.05);
-    border: 1px solid rgba(251,191,36,0.15);
-    border-radius: 8px;
-    padding: 14px 16px;
-    display: flex;
-    gap: 10px;
-    font-size: 12px;
-  }
-
-  .auth-icon { color: var(--yellow); flex-shrink: 0; margin-top: 1px; }
-  .auth-text { color: var(--muted); }
-  .auth-text strong { color: var(--text); }
-
-  /* RESPONSE BLOCK */
-  .response-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
+  .param-note { color: var(--muted); }
+  .code-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .code-block { background: #0d0d10; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 12px; line-height: 1.8; overflow-x: auto; white-space: pre; }
+  .kw { color: #c084fc; } .str { color: #86efac; } .fn { color: #93c5fd; } .cm { color: #4b5563; } .var { color: #fde68a; }
+  .info-box { background: rgba(129,140,248,0.05); border: 1px solid rgba(129,140,248,0.15); border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; font-size: 12px; }
+  .info-icon { color: var(--accent2); flex-shrink: 0; }
+  .info-text { color: var(--muted); }
+  .info-text strong { color: var(--text); }
+  .response-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); }
   .response-row:last-child { border-bottom: none; }
-
-  .status {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 4px;
-    min-width: 36px;
-    text-align: center;
-  }
-
+  .status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; min-width: 34px; text-align: center; }
   .s200 { background: rgba(52,211,153,0.1); color: var(--green); }
   .s400 { background: rgba(251,191,36,0.1); color: var(--yellow); }
-  .s403 { background: rgba(248,113,113,0.1); color: var(--red); }
-
   .response-desc { color: var(--muted); }
-
-  /* FOOTER */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 32px 0;
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-  }
-
-  footer a { color: var(--accent); text-decoration: none; }
-
-  /* TABS */
-  .tabs {
-    display: flex;
-    gap: 2px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-
-  .tab {
-    padding: 8px 14px;
-    font-size: 12px;
-    cursor: pointer;
-    color: var(--muted);
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: all 0.15s;
-    background: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    font-family: var(--mono);
-  }
-
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
+  footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: center; color: var(--muted); font-size: 12px; margin-top: 40px; }
   @media (max-width: 600px) {
-    h1 { font-size: 28px; }
-    .hero-stats { gap: 20px; }
+    .drop-zone { padding: 32px 20px; }
+    h1 { font-size: 26px; }
   }
 </style>
 </head>
@@ -447,341 +230,296 @@
       <div class="logo-icon">⚙</div>
       Medal
     </div>
-    <span class="nav-badge">v1.0 · luau</span>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="showPage('decompile', this)">Decompile</button>
+      <button class="nav-link" onclick="showPage('docs', this)">API Docs</button>
+    </div>
   </div>
 </nav>
 
-<div class="wrap">
-  <div class="hero">
-    <div class="hero-tag">Luau Bytecode Decompiler</div>
-    <h1>Medal <span>Decompiler</span><br>API Reference</h1>
-    <p class="hero-sub">Decompile Luau bytecode back into readable source code via HTTP or WebSocket. Fast, simple, stateless.</p>
-    <div class="hero-stats">
-      <div class="stat">
-        <span class="stat-val">2</span>
-        <span class="stat-label">Endpoints</span>
+<!-- DECOMPILE PAGE -->
+<div id="page-decompile" class="page active">
+  <div class="wrap">
+    <div class="decompile-hero">
+      <div class="hero-tag">Luau Bytecode Decompiler</div>
+      <h1>Drop your <span>bytecode</span>,<br>get source back.</h1>
+      <p class="hero-sub">upload a compiled luau file and decompile it instantly — no key required</p>
+    </div>
+
+    <div class="upload-section">
+
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".luac,.luau,.lua,.lc,.bin">
+        <div class="drop-icon">📂</div>
+        <div class="drop-title">Drop compiled file here</div>
+        <div class="drop-sub">or <span>click to browse</span> · .luac .luau .lua .lc .bin</div>
       </div>
-      <div class="stat">
-        <span class="stat-val">Base64</span>
-        <span class="stat-label">Input Format</span>
+
+      <div class="file-info" id="fileInfo">
+        <span style="color:var(--accent);font-size:16px;">📄</span>
+        <span class="file-name" id="fileName"></span>
+        <span class="file-size" id="fileSize"></span>
+        <button class="btn-clear" onclick="clearFile()">✕</button>
       </div>
-      <div class="stat">
-        <span class="stat-val">Luau</span>
-        <span class="stat-label">Bytecode Type</span>
+
+      <button class="btn-decompile" id="decompileBtn" onclick="doDecompile()" disabled>
+        Decompile →
+      </button>
+
+      <div class="status-bar" id="statusBar">
+        <div class="spinner" id="statusSpinner" style="display:none"></div>
+        <span id="statusText"></span>
       </div>
+
+      <div class="output-section" id="outputSection">
+        <div class="output-header">
+          <span class="output-label">Decompiled Source</span>
+          <div class="output-actions">
+            <button class="btn-sm" id="copyBtn" onclick="copyOutput()">copy</button>
+            <button class="btn-sm" onclick="downloadOutput()">download .lua</button>
+          </div>
+        </div>
+        <div class="output-box" id="outputBox"></div>
+      </div>
+
     </div>
   </div>
+</div>
 
-  <div class="content">
+<!-- DOCS PAGE -->
+<div id="page-docs" class="page">
+  <div class="wrap">
+    <div class="docs-content">
 
-    <!-- AUTH -->
-    <div>
-      <div class="section-label">Authentication</div>
-      <h2>Authorization Header</h2>
-      <p class="desc">every request must include a valid license key in the Authorization header. requests without it will be rejected.</p>
-
-      <div class="auth-box">
-        <span class="auth-icon">⚠</span>
-        <span class="auth-text">include <strong>Authorization: &lt;your_key&gt;</strong> on every request. missing or invalid keys return <strong>403 Forbidden</strong>.</span>
+      <div>
+        <div class="section-label">Base URL</div>
+        <div class="code-block">https://medaldecompile.pages.dev</div>
       </div>
 
-      <br>
-      <div class="code-label">
-        <span>Example Header</span>
-      </div>
-      <div class="code-block">
-<span class="cm">// HTTP header</span>
-<span class="var">Authorization</span>: <span class="str">ymjKH2O3BbO3bDSsKmpo3ek3vHxIWYLQfj0</span>
-      </div>
-    </div>
+      <div>
+        <div class="section-label">Endpoints</div>
 
-    <!-- POST ENDPOINT -->
-    <div>
-      <div class="section-label">Endpoints</div>
-
-      <div class="endpoint">
-        <div class="endpoint-header">
-          <span class="method post">POST</span>
-          <span class="path">/decompile</span>
-          <span class="endpoint-desc">HTTP · decompile bytecode, returns source as plain text</span>
-        </div>
-        <div class="endpoint-body">
-
-          <div>
-            <div class="code-label"><span>Request</span></div>
-            <table class="param-table">
-              <thead>
-                <tr>
-                  <th>field</th>
-                  <th>type</th>
-                  <th>description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="param-name">body</td>
-                  <td class="param-type">bytes</td>
-                  <td class="param-note">raw request body — the bytecode encoded as base64</td>
-                </tr>
-                <tr>
-                  <td class="param-name">Authorization</td>
-                  <td class="param-type">header</td>
-                  <td class="param-note">your license key</td>
-                </tr>
-              </tbody>
-            </table>
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method post">POST</span>
+            <span class="path">/decompile</span>
+            <span class="endpoint-desc">HTTP · returns decompiled source as plain text</span>
           </div>
-
-          <div>
-            <div class="tabs">
-              <button class="tab active" onclick="switchTab(this, 'lua-post')">Luau</button>
-              <button class="tab" onclick="switchTab(this, 'js-post')">JavaScript</button>
-              <button class="tab" onclick="switchTab(this, 'python-post')">Python</button>
+          <div class="endpoint-body">
+            <div>
+              <div class="code-label">Request</div>
+              <table class="param-table">
+                <thead><tr><th>field</th><th>type</th><th>description</th></tr></thead>
+                <tbody>
+                  <tr><td class="param-name">body</td><td class="param-type">bytes</td><td class="param-note">luau bytecode encoded as base64</td></tr>
+                </tbody>
+              </table>
             </div>
-
-            <div id="lua-post" class="tab-content active">
-              <div class="code-label">
-                <span>Luau Example</span>
-                <button class="copy-btn" onclick="copyCode(this)">copy</button>
-              </div>
-              <div class="code-block"><span class="kw">local</span> <span class="var">HttpService</span> = game:GetService(<span class="str">"HttpService"</span>)
-
-<span class="cm">-- bytecode bytes as base64 string</span>
-<span class="kw">local</span> <span class="var">encoded</span> = <span class="fn">base64_encode</span>(bytecodeBytes)
-
-<span class="kw">local</span> <span class="var">result</span> = <span class="fn">request</span>({
-    Url    = <span class="str">"https://medaldecompile.pages.dev/decompile"</span>,
-    Method = <span class="str">"POST"</span>,
-    Headers = {
-        Authorization = <span class="str">"&lt;your_key&gt;"</span>
-    },
-    Body = <span class="var">encoded</span>
-})
-
-<span class="fn">print</span>(<span class="var">result</span>.Body) <span class="cm">-- decompiled source</span></div>
-            </div>
-
-            <div id="js-post" class="tab-content">
-              <div class="code-label">
-                <span>JavaScript Example</span>
-                <button class="copy-btn" onclick="copyCode(this)">copy</button>
-              </div>
-              <div class="code-block"><span class="kw">const</span> <span class="var">encoded</span> = btoa(String.fromCharCode(...bytecodeBytes))
-
+            <div>
+              <div class="code-label">JavaScript Example</div>
+              <div class="code-block"><span class="kw">const</span> <span class="var">encoded</span> = btoa(String.<span class="fn">fromCharCode</span>(...bytecodeBytes))
 <span class="kw">const</span> <span class="var">res</span> = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://medaldecompile.pages.dev/decompile"</span>, {
-    method:  <span class="str">"POST"</span>,
-    headers: { <span class="str">Authorization</span>: <span class="str">"&lt;your_key&gt;"</span> },
-    body:    <span class="var">encoded</span>
+    method: <span class="str">"POST"</span>,
+    body:   <span class="var">encoded</span>
 })
-
-<span class="kw">const</span> <span class="var">source</span> = <span class="kw">await</span> <span class="var">res</span>.<span class="fn">text</span>()
-<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">source</span>)</div>
+<span class="kw">const</span> <span class="var">source</span> = <span class="kw">await</span> <span class="var">res</span>.<span class="fn">text</span>()</div>
             </div>
-
-            <div id="python-post" class="tab-content">
-              <div class="code-label">
-                <span>Python Example</span>
-                <button class="copy-btn" onclick="copyCode(this)">copy</button>
-              </div>
+            <div>
+              <div class="code-label">Python Example</div>
               <div class="code-block"><span class="kw">import</span> base64, requests
-
-<span class="var">encoded</span> = base64.<span class="fn">b64encode</span>(bytecode_bytes)
-
-<span class="var">r</span> = requests.<span class="fn">post</span>(
-    <span class="str">"https://medaldecompile.pages.dev/decompile"</span>,
-    headers={<span class="str">"Authorization"</span>: <span class="str">"&lt;your_key&gt;"</span>},
-    data=<span class="var">encoded</span>
-)
-
+<span class="var">encoded</span> = base64.<span class="fn">b64encode</span>(open(<span class="str">"script.luac"</span>, <span class="str">"rb"</span>).<span class="fn">read</span>())
+<span class="var">r</span> = requests.<span class="fn">post</span>(<span class="str">"https://medaldecompile.pages.dev/decompile"</span>, data=<span class="var">encoded</span>)
 <span class="fn">print</span>(<span class="var">r</span>.text)</div>
             </div>
-          </div>
-
-          <div>
-            <div class="code-label"><span>Responses</span></div>
-            <div class="code-block" style="padding: 8px 16px;">
-              <div class="response-row"><span class="status s200">200</span><span class="response-desc">plain text — decompiled luau source code</span></div>
-              <div class="response-row"><span class="status s400">400</span><span class="response-desc">invalid bytecode — body is not valid base64</span></div>
-              <div class="response-row"><span class="status s403">403</span><span class="response-desc">invalid license — Authorization header missing or wrong</span></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- WS ENDPOINT -->
-    <div>
-      <div class="endpoint">
-        <div class="endpoint-header">
-          <span class="method ws">WS</span>
-          <span class="path">/decompile_ws</span>
-          <span class="endpoint-desc">WebSocket · batch decompile, async with message IDs</span>
-        </div>
-        <div class="endpoint-body">
-
-          <div>
-            <p class="desc" style="margin-bottom: 16px;">connect once, send multiple decompile jobs. each message gets an <strong style="color:var(--text)">id</strong> back so you can match responses to requests — useful when firing many requests in parallel.</p>
-
-            <div class="code-label"><span>Message Format (send)</span></div>
-            <table class="param-table">
-              <thead>
-                <tr>
-                  <th>field</th>
-                  <th>type</th>
-                  <th>description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="param-name">id</td>
-                  <td class="param-type">string</td>
-                  <td class="param-note">any string — echoed back in the response</td>
-                </tr>
-                <tr>
-                  <td class="param-name">encoded_bytecode</td>
-                  <td class="param-type">string</td>
-                  <td class="param-note">luau bytecode encoded as base64</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            <div class="code-label"><span>Response Format (receive)</span></div>
-            <table class="param-table">
-              <thead>
-                <tr>
-                  <th>field</th>
-                  <th>type</th>
-                  <th>description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="param-name">id</td>
-                  <td class="param-type">string</td>
-                  <td class="param-note">same id you sent</td>
-                </tr>
-                <tr>
-                  <td class="param-name">decompilation</td>
-                  <td class="param-type">string</td>
-                  <td class="param-note">decompiled luau source code</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            <div class="tabs">
-              <button class="tab active" onclick="switchTab(this, 'js-ws')">JavaScript</button>
-              <button class="tab" onclick="switchTab(this, 'python-ws')">Python</button>
-            </div>
-
-            <div id="js-ws" class="tab-content active">
-              <div class="code-label">
-                <span>JavaScript Example</span>
-                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            <div>
+              <div class="code-label">Responses</div>
+              <div style="background:#0d0d10;border:1px solid var(--border);border-radius:8px;padding:8px 14px;">
+                <div class="response-row"><span class="status s200">200</span><span class="response-desc">plain text — decompiled luau source</span></div>
+                <div class="response-row"><span class="status s400">400</span><span class="response-desc">invalid bytecode — body is not valid base64</span></div>
               </div>
-              <div class="code-block"><span class="kw">const</span> <span class="var">ws</span> = <span class="kw">new</span> <span class="fn">WebSocket</span>(
-    <span class="str">"wss://medaldecompile.pages.dev/decompile_ws"</span>,
-    { headers: { <span class="str">Authorization</span>: <span class="str">"&lt;your_key&gt;"</span> } }
-)
+            </div>
+          </div>
+        </div>
 
-<span class="var">ws</span>.onopen = () => {
-    <span class="var">ws</span>.<span class="fn">send</span>(<span class="fn">JSON.stringify</span>({
-        id: <span class="str">"job_1"</span>,
-        encoded_bytecode: <span class="fn">btoa</span>(String.<span class="fn">fromCharCode</span>(...bytecodeBytes))
-    }))
-}
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <span class="method ws">WS</span>
+            <span class="path">/decompile_ws</span>
+            <span class="endpoint-desc">WebSocket · async batch decompile with message IDs</span>
+          </div>
+          <div class="endpoint-body">
+            <div>
+              <div class="code-label">Send (JSON)</div>
+              <table class="param-table">
+                <thead><tr><th>field</th><th>type</th><th>description</th></tr></thead>
+                <tbody>
+                  <tr><td class="param-name">id</td><td class="param-type">string</td><td class="param-note">any string, echoed back in response</td></tr>
+                  <tr><td class="param-name">encoded_bytecode</td><td class="param-type">string</td><td class="param-note">base64 encoded luau bytecode</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div class="code-label">Receive (JSON)</div>
+              <table class="param-table">
+                <thead><tr><th>field</th><th>type</th><th>description</th></tr></thead>
+                <tbody>
+                  <tr><td class="param-name">id</td><td class="param-type">string</td><td class="param-note">same id you sent</td></tr>
+                  <tr><td class="param-name">decompilation</td><td class="param-type">string</td><td class="param-note">decompiled source code</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div class="code-label">JavaScript Example</div>
+              <div class="code-block"><span class="kw">const</span> <span class="var">ws</span> = <span class="kw">new</span> <span class="fn">WebSocket</span>(<span class="str">"wss://medaldecompile.pages.dev/decompile_ws"</span>)
 
-<span class="var">ws</span>.onmessage = (<span class="var">e</span>) => {
+<span class="var">ws</span>.onopen = () => <span class="var">ws</span>.<span class="fn">send</span>(<span class="fn">JSON.stringify</span>({
+    id: <span class="str">"job_1"</span>,
+    encoded_bytecode: btoa(String.<span class="fn">fromCharCode</span>(...bytecodeBytes))
+}))
+
+<span class="var">ws</span>.onmessage = <span class="var">e</span> => {
     <span class="kw">const</span> { <span class="var">id</span>, <span class="var">decompilation</span> } = <span class="fn">JSON.parse</span>(<span class="var">e</span>.data)
-    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`[<span class="var">${id}</span>]`</span>, <span class="var">decompilation</span>)
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">id</span>, <span class="var">decompilation</span>)
 }</div>
             </div>
-
-            <div id="python-ws" class="tab-content">
-              <div class="code-label">
-                <span>Python Example</span>
-                <button class="copy-btn" onclick="copyCode(this)">copy</button>
-              </div>
-              <div class="code-block"><span class="kw">import</span> asyncio, base64, json, websockets
-
-<span class="kw">async def</span> <span class="fn">main</span>():
-    uri = <span class="str">"wss://medaldecompile.pages.dev/decompile_ws"</span>
-    headers = {<span class="str">"Authorization"</span>: <span class="str">"&lt;your_key&gt;"</span>}
-
-    <span class="kw">async with</span> websockets.<span class="fn">connect</span>(uri, extra_headers=headers) <span class="kw">as</span> ws:
-        <span class="kw">await</span> ws.<span class="fn">send</span>(json.<span class="fn">dumps</span>({
-            <span class="str">"id"</span>: <span class="str">"job_1"</span>,
-            <span class="str">"encoded_bytecode"</span>: base64.<span class="fn">b64encode</span>(bytecode).<span class="fn">decode</span>()
-        }))
-        <span class="var">resp</span> = json.<span class="fn">loads</span>(<span class="kw">await</span> ws.<span class="fn">recv</span>())
-        <span class="fn">print</span>(<span class="var">resp</span>[<span class="str">"decompilation"</span>])
-
-asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</div>
-            </div>
           </div>
-
         </div>
       </div>
-    </div>
 
-    <!-- NOTES -->
-    <div>
-      <div class="section-label">Notes</div>
-      <div style="display: grid; gap: 12px;">
-        <div class="auth-box" style="background: rgba(129,140,248,0.05); border-color: rgba(129,140,248,0.15);">
-          <span style="color: var(--accent2); flex-shrink:0;">ℹ</span>
-          <span class="auth-text"><strong>Input must be base64.</strong> raw bytecode bytes will fail — always encode first.</span>
-        </div>
-        <div class="auth-box" style="background: rgba(129,140,248,0.05); border-color: rgba(129,140,248,0.15);">
-          <span style="color: var(--accent2); flex-shrink:0;">ℹ</span>
-          <span class="auth-text"><strong>Luau only.</strong> this decompiler handles luau bytecode. lua 5.1 bytecode is a different format.</span>
-        </div>
-        <div class="auth-box" style="background: rgba(129,140,248,0.05); border-color: rgba(129,140,248,0.15);">
-          <span style="color: var(--accent2); flex-shrink:0;">ℹ</span>
-          <span class="auth-text"><strong>WebSocket is better for bulk.</strong> for decompiling many scripts at once use <code>/decompile_ws</code> with multiple concurrent messages.</span>
+      <div>
+        <div class="section-label">Notes</div>
+        <div style="display:grid;gap:10px;">
+          <div class="info-box">
+            <span class="info-icon">ℹ</span>
+            <span class="info-text"><strong>Base64 required.</strong> always encode bytecode to base64 before sending — raw bytes will be rejected.</span>
+          </div>
+          <div class="info-box">
+            <span class="info-icon">ℹ</span>
+            <span class="info-text"><strong>Luau only.</strong> lua 5.1 .luac bytecode format is different — make sure your file is compiled luau.</span>
+          </div>
+          <div class="info-box">
+            <span class="info-icon">ℹ</span>
+            <span class="info-text"><strong>WebSocket for bulk.</strong> /decompile_ws lets you send multiple jobs at once, each identified by id.</span>
+          </div>
         </div>
       </div>
-    </div>
 
+    </div>
   </div>
 </div>
 
 <footer>
-  <div class="wrap">
-    Medal Decompiler · Lua bytecode decompilation API
-  </div>
+  <div class="wrap">medaldecompile.pages.dev · luau bytecode decompilation</div>
 </footer>
 
 <script>
-function switchTab(btn, id) {
-  const parent = btn.closest('.endpoint-body') || btn.closest('.content')
-  const group = btn.parentElement
-  group.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+var selectedFile = null
+var outputText = ''
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'))
+  document.getElementById('page-' + name).classList.add('active')
   btn.classList.add('active')
-  const panel = btn.closest('[class]')
-  const allContents = document.querySelectorAll(`[id^="${id.split('-')[0]}-"]`)
-  // hide siblings
-  const siblings = btn.parentElement.parentElement.querySelectorAll('.tab-content')
-  siblings.forEach(s => s.classList.remove('active'))
-  document.getElementById(id).classList.add('active')
 }
 
-function copyCode(btn) {
-  const code = btn.closest('.endpoint-body') 
-    ? btn.parentElement.nextElementSibling.textContent 
-    : btn.parentElement.nextElementSibling.textContent
-  navigator.clipboard.writeText(code.trim()).then(() => {
+var dz = document.getElementById('dropZone')
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover') })
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'))
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover')
+  var f = e.dataTransfer.files[0]
+  if (f) setFile(f)
+})
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) setFile(e.target.files[0])
+})
+
+function setFile(f) {
+  selectedFile = f
+  document.getElementById('fileName').textContent = f.name
+  document.getElementById('fileSize').textContent = fmtSize(f.size)
+  document.getElementById('fileInfo').classList.add('show')
+  clearStatus(); hideOutput()
+  document.getElementById('decompileBtn').disabled = false
+}
+
+function clearFile() {
+  selectedFile = null
+  document.getElementById('fileInput').value = ''
+  document.getElementById('fileInfo').classList.remove('show')
+  document.getElementById('decompileBtn').disabled = true
+  clearStatus(); hideOutput()
+}
+
+function fmtSize(n) {
+  if (n < 1024) return n + ' B'
+  if (n < 1048576) return (n/1024).toFixed(1) + ' KB'
+  return (n/1048576).toFixed(1) + ' MB'
+}
+
+function setStatus(type, msg, spinner) {
+  var bar = document.getElementById('statusBar')
+  bar.className = 'status-bar show ' + type
+  document.getElementById('statusSpinner').style.display = spinner ? '' : 'none'
+  document.getElementById('statusText').textContent = msg
+}
+
+function clearStatus() { document.getElementById('statusBar').className = 'status-bar' }
+function hideOutput() { document.getElementById('outputSection').classList.remove('show') }
+
+async function doDecompile() {
+  if (!selectedFile) return
+  document.getElementById('decompileBtn').disabled = true
+  hideOutput()
+  setStatus('loading', 'reading file...', true)
+
+  try {
+    var bytes = await selectedFile.arrayBuffer()
+    var arr = new Uint8Array(bytes)
+    var b64 = btoa(arr.reduce((s, b) => s + String.fromCharCode(b), ''))
+
+    setStatus('loading', 'decompiling...', true)
+
+    var res = await fetch('https://medaldecompile.pages.dev/decompile', {
+      method: 'POST',
+      body: b64
+    })
+
+    if (res.status === 400) { setStatus('error', 'invalid bytecode (400) — make sure the file is compiled luau'); return }
+    if (!res.ok) { setStatus('error', 'server error (' + res.status + ')'); return }
+
+    outputText = await res.text()
+    document.getElementById('outputBox').textContent = outputText
+    document.getElementById('outputSection').classList.add('show')
+    setStatus('success', 'done · ' + outputText.split('\n').length + ' lines')
+
+  } catch (err) {
+    setStatus('error', 'request failed — ' + err.message)
+  } finally {
+    document.getElementById('decompileBtn').disabled = false
+  }
+}
+
+function copyOutput() {
+  if (!outputText) return
+  navigator.clipboard.writeText(outputText).then(() => {
+    var btn = document.getElementById('copyBtn')
     btn.textContent = 'copied!'
     btn.classList.add('copied')
-    setTimeout(() => {
-      btn.textContent = 'copy'
-      btn.classList.remove('copied')
-    }, 1500)
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied') }, 1500)
   })
+}
+
+function downloadOutput() {
+  if (!outputText) return
+  var name = selectedFile
+    ? selectedFile.name.replace(/\.[^.]+$/, '') + '_decompiled.lua'
+    : 'decompiled.lua'
+  var a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([outputText], { type: 'text/plain' }))
+  a.download = name
+  a.click()
 }
 </script>
 </body>
