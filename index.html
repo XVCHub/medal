@@ -550,7 +550,7 @@
 <span class="kw">local</span> <span class="var">encoded</span> = <span class="fn">base64_encode</span>(bytecodeBytes)
 
 <span class="kw">local</span> <span class="var">result</span> = <span class="fn">request</span>({
-    Url    = <span class="str">"https://medaldecompiler.pages.dev/decompile"</span>,
+    Url    = <span class="str">"https://medaldecompile.pages.dev/decompile"</span>,
     Method = <span class="str">"POST"</span>,
     Headers = {
         Authorization = <span class="str">"&lt;your_key&gt;"</span>
@@ -568,7 +568,7 @@
               </div>
               <div class="code-block"><span class="kw">const</span> <span class="var">encoded</span> = btoa(String.fromCharCode(...bytecodeBytes))
 
-<span class="kw">const</span> <span class="var">res</span> = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://medaldecompiler.pages.dev/decompile"</span>, {
+<span class="kw">const</span> <span class="var">res</span> = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://medaldecompile.pages.dev/decompile"</span>, {
     method:  <span class="str">"POST"</span>,
     headers: { <span class="str">Authorization</span>: <span class="str">"&lt;your_key&gt;"</span> },
     body:    <span class="var">encoded</span>
@@ -588,7 +588,7 @@
 <span class="var">encoded</span> = base64.<span class="fn">b64encode</span>(bytecode_bytes)
 
 <span class="var">r</span> = requests.<span class="fn">post</span>(
-    <span class="str">"https://medaldecompiler.pages.dev/decompile"</span>,
+    <span class="str">"https://medaldecompile.pages.dev/decompile"</span>,
     headers={<span class="str">"Authorization"</span>: <span class="str">"&lt;your_key&gt;"</span>},
     data=<span class="var">encoded</span>
 )
@@ -684,7 +684,7 @@
                 <button class="copy-btn" onclick="copyCode(this)">copy</button>
               </div>
               <div class="code-block"><span class="kw">const</span> <span class="var">ws</span> = <span class="kw">new</span> <span class="fn">WebSocket</span>(
-    <span class="str">"wss://medaldecompiler.pages.dev/decompile_ws"</span>,
+    <span class="str">"wss://medaldecompile.pages.dev/decompile_ws"</span>,
     { headers: { <span class="str">Authorization</span>: <span class="str">"&lt;your_key&gt;"</span> } }
 )
 
@@ -709,7 +709,7 @@
               <div class="code-block"><span class="kw">import</span> asyncio, base64, json, websockets
 
 <span class="kw">async def</span> <span class="fn">main</span>():
-    uri = <span class="str">"wss://medaldecompiler.pages.dev/decompile_ws"</span>
+    uri = <span class="str">"wss://medaldecompile.pages.dev/decompile_ws"</span>
     headers = {<span class="str">"Authorization"</span>: <span class="str">"&lt;your_key&gt;"</span>}
 
     <span class="kw">async with</span> websockets.<span class="fn">connect</span>(uri, extra_headers=headers) <span class="kw">as</span> ws:
@@ -752,7 +752,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</div>
 
 <footer>
   <div class="wrap">
-    Medal Decompiler · Luau bytecode decompilation API
+    Medal Decompiler · Lua bytecode decompilation API
   </div>
 </footer>
 
