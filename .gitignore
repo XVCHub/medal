@@ -4,3 +4,10 @@ target/
 Cargo.lock
 flamegraph.svg
 result.lua
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
