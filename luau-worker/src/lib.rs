@@ -6,7 +6,7 @@ use luau_lifter::decompile_bytecode;
 use serde::{Deserialize, Serialize};
 use worker::*;
 
-const AUTH_SECRET: &str = "ymjKH2O3BbO3bDSsKmpo3ek3vHxIWYLQfj0";
+
 
 #[derive(Deserialize)]
 struct DecompileMessage {
@@ -26,17 +26,14 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
 
     let router = Router::new();
     router
+        .get("/", |_, _| {
+            let html = include_str!("../../index.html");
+            Response::ok(html).map(|mut res| {
+                res.headers_mut().set("Content-Type", "text/html").unwrap();
+                res
+            })
+        })
         .get_async("/decompile_ws", |req, _ctx| async move {
-            let license = req
-                .headers()
-                .get("Authorization")
-                .unwrap_or_default()
-                .expect("authorization header is required");
-
-            if license != AUTH_SECRET {
-                return Response::error("invalid license", 403);
-            }
-
             let pair = WebSocketPair::new()?;
             let server = pair.server;
             server.accept()?;
@@ -47,19 +44,18 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
                     if let WebsocketEvent::Message(msg) =
                         event.expect("received error in websocket")
                     {
-                        let msg = msg
-                            .json::<DecompileMessage>()
-                            .expect("malformed decompile message");
-                        let bytecode = BASE64_STANDARD
-                            .decode(msg.encoded_bytecode)
-                            .expect("bytecode must be base64 encoded");
-                        let resp = DecompileResponse {
-                            id: msg.id,
-                            decompilation: decompile_bytecode(&bytecode, 1),
-                        };
-                        server
-                            .send_with_str(serde_json::to_string(&resp).unwrap())
-                            .unwrap();
+                        if let Ok(msg) = msg.json::<DecompileMessage>() {
+                            let bytecode = BASE64_STANDARD
+                                .decode(msg.encoded_bytecode)
+                                .expect("bytecode must be base64 encoded");
+                            let resp = DecompileResponse {
+                                id: msg.id,
+                                decompilation: decompile_bytecode(&bytecode, 1),
+                            };
+                            server
+                                .send_with_str(serde_json::to_string(&resp).unwrap())
+                                .unwrap();
+                        }
                     }
                 }
             });
@@ -67,20 +63,10 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
             Response::from_websocket(pair.client)
         })
         .post_async("/decompile", |mut req, _ctx| async move {
-            let license = req
-                .headers()
-                .get("Authorization")
-                .unwrap_or_default()
-                .expect("authorization header is required");
-
-            if license != AUTH_SECRET {
-                return Response::error("invalid license", 403);
-            }
-
-            let encoded_bytecode = req.bytes().await?;
-            match BASE64_STANDARD.decode(encoded_bytecode) {
+            let encoded_bytecode = req.text().await?;
+            match BASE64_STANDARD.decode(encoded_bytecode.trim()) {
                 Ok(bytecode) => Response::ok(decompile_bytecode(&bytecode, 203)),
-                Err(_) => Response::error("invalid bytecode", 400),
+                Err(_) => Response::error("invalid bytecode (base64 expected)", 400),
             }
         })
         .run(req, env)
