@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medal Decompile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0b;
+  --surface: #111113;
+  --surface2: #18181b;
+  --border: #27272a;
+  --border2: #3f3f46;
+  --accent: #e4ff3d;
+  --accent2: #b8d900;
+  --text: #fafafa;
+  --muted: #71717a;
+  --muted2: #a1a1aa;
+  --green: #4ade80;
+  --red: #f87171;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 500px;
+  background: radial-gradient(ellipse, rgba(228,255,61,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 56px;
+  background: rgba(10,10,11,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-logo .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-links a {
+  font-size: 13px;
+  color: var(--muted2);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  font-family: var(--mono);
+}
+
+.nav-links a:hover { color: var(--text); background: var(--surface2); }
+.nav-links a.active { color: var(--text); }
+
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 4rem 2rem 6rem;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent2);
+  background: rgba(228,255,61,0.08);
+  border: 1px solid rgba(228,255,61,0.2);
+  padding: 4px 10px;
+  border-radius: 99px;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hero-tag::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+}
+
+h1 span { color: var(--accent); }
+
+.hero-sub {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted2);
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.drop-zone {
+  padding: 2.5rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  border-bottom: 1px solid var(--border);
+}
+
+.drop-zone:hover, .drop-zone.drag-over {
+  background: rgba(228,255,61,0.03);
+}
+
+.drop-zone input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.drop-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.drop-zone:hover .drop-icon, .drop-zone.drag-over .drop-icon {
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.drop-main {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.drop-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.file-info {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: rgba(228,255,61,0.04);
+  border-bottom: 1px solid rgba(228,255,61,0.15);
+}
+
+.file-info.show { display: flex; }
+
+.file-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent2);
+}
+
+.file-size {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.remove-file {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.remove-file:hover { color: var(--red); }
+
+.action-bar {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.btn-decompile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background: var(--accent);
+  color: #0a0a0b;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  letter-spacing: 0.01em;
+}
+
+.btn-decompile:hover { background: var(--accent2); }
+.btn-decompile:active { transform: scale(0.97); }
+.btn-decompile:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+.btn-decompile .arrow { font-size: 14px; transition: transform 0.15s; }
+.btn-decompile:not(:disabled):hover .arrow { transform: translateX(3px); }
+
+.status-pill {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  letter-spacing: 0.03em;
+}
+
+.status-pill.show { display: flex; }
+.status-pill.loading { color: var(--muted2); background: var(--surface2); border: 1px solid var(--border2); }
+.status-pill.ok { color: #0a0a0b; background: var(--green); }
+.status-pill.err { color: #0a0a0b; background: var(--red); }
+
+.spin {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.output-header {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.output-actions { display: flex; gap: 6px; }
+
+.btn-sm {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--muted2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  letter-spacing: 0.03em;
+}
+
+.btn-sm:hover { color: var(--text); border-color: var(--border2); }
+.btn-sm:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.output-area {
+  min-height: 320px;
+  max-height: 520px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.output-area::-webkit-scrollbar { width: 6px; }
+.output-area::-webkit-scrollbar-track { background: transparent; }
+.output-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+#output-code {
+  display: block;
+  width: 100%;
+  min-height: 320px;
+  padding: 1.25rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted2);
+  caret-color: var(--accent);
+}
+
+#output-code::placeholder { color: var(--border2); }
+
+.line-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.stats-bar {
+  padding: 0.6rem 1.25rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.stat-val { color: var(--muted2); }
+
+.page-docs { display: none; }
+.page-docs.active { display: block; }
+.page-main { display: block; }
+.page-main.hidden { display: none; }
+
+.docs-section {
+  margin-bottom: 2.5rem;
+}
+
+.docs-section h2 {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.docs-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.docs-section p, .docs-section li {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted2);
+  line-height: 1.8;
+}
+
+.docs-section ul { padding-left: 1.25rem; }
+
+.method-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-right: 6px;
+  letter-spacing: 0.05em;
+}
+
+.method-post { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.method-ws { background: rgba(228,255,61,0.1); color: var(--accent2); border: 1px solid rgba(228,255,61,0.2); }
+
+.endpoint-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.code-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+}
+
+.code-block code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted2);
+  line-height: 1.8;
+  white-space: pre;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+th {
+  text-align: left;
+  padding: 7px 12px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+td {
+  padding: 7px 12px;
+  color: var(--muted2);
+  border-bottom: 1px solid var(--border);
+}
+
+td:first-child { color: var(--accent2); }
+
+.note-box {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(228,255,61,0.04);
+  border: 1px solid rgba(228,255,61,0.12);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+}
+
+.note-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+.note-text {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted2);
+  line-height: 1.7;
+}
+
+.base-url-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.base-url-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.base-url-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent2);
+}
+
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo" onclick="showPage('main'); return false;">
+    <div class="dot"></div>
+    Medal
+  </a>
+  <div class="nav-links">
+    <a href="#" class="active" id="nav-decompile" onclick="showPage('main'); return false;">Decompile</a>
+    <a href="#" id="nav-docs" onclick="showPage('docs'); return false;">API Docs</a>
+  </div>
+</nav>
+
+<main>
+
+  <div class="page-main" id="page-main">
+    <div class="hero">
+      <div class="hero-tag">luau bytecode decompiler</div>
+      <h1>Drop your bytecode,<br><span>get source back.</span></h1>
+      <p class="hero-sub">upload a compiled luau file and decompile it instantly — no key required</p>
+    </div>
+
+    <div class="card">
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".luac,.luau,.lua,.lc,.bin">
+        <div class="drop-icon">📂</div>
+        <div class="drop-main">Drop compiled file here</div>
+        <div class="drop-sub">or click to browse &nbsp;·&nbsp; .luac .luau .lua .lc .bin</div>
+      </div>
+
+      <div class="file-info" id="file-info">
+        <div class="file-name">
+          <span>📄</span>
+          <span id="file-name-text"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="file-size" id="file-size-text"></span>
+          <button class="remove-file" id="remove-file" title="remove">✕</button>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn-decompile" id="decompile-btn" disabled>
+          Decompile <span class="arrow">→</span>
+        </button>
+        <div class="status-pill" id="status-pill">
+          <div class="spin" id="spin-icon"></div>
+          <span id="status-text">processing...</span>
+        </div>
+      </div>
+
+      <div class="output-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="card-title">decompiled source</span>
+          <span class="line-count" id="line-count"></span>
+        </div>
+        <div class="output-actions">
+          <button class="btn-sm" id="copy-btn" disabled>copy</button>
+          <button class="btn-sm" id="dl-btn" disabled>download .lua</button>
+        </div>
+      </div>
+
+      <div class="output-area">
+        <textarea id="output-code" readonly placeholder="// decompiled source will appear here..."></textarea>
+      </div>
+
+      <div class="stats-bar" id="stats-bar" style="display:none;">
+        <div class="stat"><span>size</span><span class="stat-val" id="stat-size"></span></div>
+        <div class="stat"><span>lines</span><span class="stat-val" id="stat-lines"></span></div>
+        <div class="stat"><span>chars</span><span class="stat-val" id="stat-chars"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-docs hidden" id="page-docs">
+    <div style="margin-bottom:2rem;">
+      <h1 style="font-size:1.8rem;margin-bottom:0.5rem;">API Docs</h1>
+      <p style="font-family:var(--mono);font-size:13px;color:var(--muted2);">integrate medal decompile into your own tools</p>
+    </div>
+
+    <div class="base-url-bar">
+      <span class="base-url-label">Base URL</span>
+      <span class="base-url-val">https://medaldecompile.pages.dev</span>
+    </div>
+
+    <div class="docs-section">
+      <h2>Endpoints</h2>
+
+      <div class="endpoint-row">
+        <span class="method-badge method-post">POST</span>
+        /decompile
+        <span style="font-size:11px;color:var(--muted);margin-left:auto;">HTTP · returns decompiled source as plain text</span>
+      </div>
+
+      <h3>Request</h3>
+      <div class="table-wrap"><table>
+        <tr><th>field</th><th>type</th><th>description</th></tr>
+        <tr><td>body</td><td>bytes</td><td>luau bytecode encoded as base64</td></tr>
+      </table></div>
+
+      <h3>JavaScript Example</h3>
+      <div class="code-block"><code>const encoded = btoa(String.fromCharCode(...bytecodeBytes))
+const res = await fetch("https://medaldecompile.pages.dev/decompile", {
+  method: "POST",
+  body: encoded
+})
+const source = await res.text()</code></div>
+
+      <h3>Python Example</h3>
+      <div class="code-block"><code>import base64, requests
+encoded = base64.b64encode(open("script.luac", "rb").read())
+r = requests.post("https://medaldecompile.pages.dev/decompile", data=encoded)
+print(r.text)</code></div>
+
+      <h3>Responses</h3>
+      <div class="table-wrap"><table>
+        <tr><th>code</th><th>description</th></tr>
+        <tr><td>200</td><td>plain text — decompiled luau source</td></tr>
+        <tr><td>400</td><td>invalid bytecode — body is not valid base64</td></tr>
+      </table></div>
+    </div>
+
+    <div class="docs-section">
+      <div class="endpoint-row">
+        <span class="method-badge method-ws">WS</span>
+        /decompile_ws
+        <span style="font-size:11px;color:var(--muted);margin-left:auto;">WebSocket · async batch decompile with message IDs</span>
+      </div>
+
+      <h3>Send (JSON)</h3>
+      <div class="table-wrap"><table>
+        <tr><th>field</th><th>type</th><th>description</th></tr>
+        <tr><td>id</td><td>string</td><td>any string, echoed back in response</td></tr>
+        <tr><td>encoded_bytecode</td><td>string</td><td>base64 encoded luau bytecode</td></tr>
+      </table></div>
+
+      <h3>Receive (JSON)</h3>
+      <div class="table-wrap"><table>
+        <tr><th>field</th><th>type</th><th>description</th></tr>
+        <tr><td>id</td><td>string</td><td>same id you sent</td></tr>
+        <tr><td>decompilation</td><td>string</td><td>decompiled source code</td></tr>
+      </table></div>
+
+      <h3>JavaScript Example</h3>
+      <div class="code-block"><code>const ws = new WebSocket("wss://medaldecompile.pages.dev/decompile_ws")
+ws.onopen = () => ws.send(JSON.stringify({
+  id: "job_1",
+  encoded_bytecode: btoa(String.fromCharCode(...bytecodeBytes))
+}))
+ws.onmessage = e => {
+  const { id, decompilation } = JSON.parse(e.data)
+  console.log(id, decompilation)
+}</code></div>
+    </div>
+
+    <div class="docs-section">
+      <h2>Notes</h2>
+      <div class="note-box">
+        <span class="note-icon">ℹ</span>
+        <span class="note-text"><strong style="color:var(--text)">Base64 required.</strong> always encode bytecode to base64 before sending — raw bytes will be rejected.</span>
+      </div>
+      <div class="note-box">
+        <span class="note-icon">ℹ</span>
+        <span class="note-text"><strong style="color:var(--text)">Luau only.</strong> lua 5.1 .luac bytecode format is different — make sure your file is compiled luau.</span>
+      </div>
+      <div class="note-box">
+        <span class="note-icon">ℹ</span>
+        <span class="note-text"><strong style="color:var(--text)">WebSocket for bulk.</strong> /decompile_ws lets you send multiple jobs at once, each identified by id.</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>medaldecompile.pages.dev · luau bytecode decompilation</footer>
+
+<script>
+const API = 'https://medaldecompile.pages.dev'
+
+let currentFile = null
+
+const dropZone = document.getElementById('drop-zone')
+const fileInput = document.getElementById('file-input')
+const fileInfo = document.getElementById('file-info')
+const fileNameText = document.getElementById('file-name-text')
+const fileSizeText = document.getElementById('file-size-text')
+const removeFile = document.getElementById('remove-file')
+const decompileBtn = document.getElementById('decompile-btn')
+const statusPill = document.getElementById('status-pill')
+const spinIcon = document.getElementById('spin-icon')
+const statusText = document.getElementById('status-text')
+const outputCode = document.getElementById('output-code')
+const lineCount = document.getElementById('line-count')
+const copyBtn = document.getElementById('copy-btn')
+const dlBtn = document.getElementById('dl-btn')
+const statsBar = document.getElementById('stats-bar')
+
+const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b/1024).toFixed(1) + ' KB' : (b/1048576).toFixed(2) + ' MB'
+
+const setFile = file => {
+  currentFile = file
+  fileNameText.textContent = file.name
+  fileSizeText.textContent = fmtSize(file.size)
+  fileInfo.classList.add('show')
+  decompileBtn.disabled = false
+  setStatus('', '')
+}
+
+const clearFile = () => {
+  currentFile = null
+  fileInput.value = ''
+  fileInfo.classList.remove('show')
+  decompileBtn.disabled = true
+  outputCode.value = ''
+  lineCount.textContent = ''
+  copyBtn.disabled = true
+  dlBtn.disabled = true
+  statsBar.style.display = 'none'
+  setStatus('', '')
+}
+
+const setStatus = (msg, type) => {
+  if (!msg) { statusPill.classList.remove('show', 'loading', 'ok', 'err'); return }
+  statusPill.classList.add('show')
+  statusPill.classList.remove('loading', 'ok', 'err')
+  statusPill.classList.add(type)
+  statusText.textContent = msg
+  spinIcon.style.display = type === 'loading' ? 'block' : 'none'
+}
+
+fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]) })
+removeFile.addEventListener('click', clearFile)
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over') })
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'))
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over')
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0])
+})
+
+decompileBtn.addEventListener('click', async () => {
+  if (!currentFile) return
+  decompileBtn.disabled = true
+  setStatus('processing...', 'loading')
+  outputCode.value = ''
+  copyBtn.disabled = true
+  dlBtn.disabled = true
+  statsBar.style.display = 'none'
+  lineCount.textContent = ''
+
+  try {
+    const bytes = await currentFile.arrayBuffer()
+    const b64 = btoa(String.fromCharCode(...new Uint8Array(bytes)))
+
+    const res = await fetch(API + '/decompile', {
+      method: 'POST',
+      body: b64
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      setStatus('error: ' + err, 'err')
+      decompileBtn.disabled = false
+      return
+    }
+
+    const src = await res.text()
+    outputCode.value = src
+    const lines = src.split('\n').length
+    lineCount.textContent = lines + ' lines'
+    copyBtn.disabled = false
+    dlBtn.disabled = false
+    statsBar.style.display = 'flex'
+    document.getElementById('stat-size').textContent = fmtSize(new Blob([src]).size)
+    document.getElementById('stat-lines').textContent = lines.toLocaleString()
+    document.getElementById('stat-chars').textContent = src.length.toLocaleString()
+    setStatus('done', 'ok')
+  } catch(e) {
+    setStatus('request failed', 'err')
+  }
+
+  decompileBtn.disabled = false
+})
+
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(outputCode.value).then(() => {
+    copyBtn.textContent = 'copied!'
+    setTimeout(() => copyBtn.textContent = 'copy', 1500)
+  })
+})
+
+dlBtn.addEventListener('click', () => {
+  const name = (currentFile?.name.replace(/\.[^.]+$/, '') || 'decompiled') + '.lua'
+  const blob = new Blob([outputCode.value], { type: 'text/plain' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = name
+  a.click()
+})
+
+const showPage = p => {
+  document.getElementById('page-main').classList.toggle('hidden', p !== 'main')
+  document.getElementById('page-docs').classList.toggle('hidden', p !== 'docs')
+  document.getElementById('nav-decompile').classList.toggle('active', p === 'main')
+  document.getElementById('nav-docs').classList.toggle('active', p === 'docs')
+}
+</script>
+
+</body>
+</html>
